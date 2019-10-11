@@ -58,5 +58,5 @@ void ShmVar<T>::Set(T data)
     while (m_data->tagWt != SETABLE)
         ;
     m_data->data = data;
-    Assertf(__sync_bool_compare_and_swap(&ptr->tagWt, SETABLE, READABLE), "Tag status error");
+    Assertf(__sync_bool_compare_and_swap(&m_data->tagWt, SETABLE, READABLE), "Tag status error");
 }

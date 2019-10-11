@@ -15,6 +15,7 @@ GetMemory.restype = c_void_p
 # extern "C" void RegisterMemory(uint16_t id, uint32_t size);
 RegisterMemory = shm.RegisterMemory
 RegisterMemory.argtypes = [c_uint16, c_uint32]
+RegisterMemory.restype = c_void_p
 # extern "C" void *AcquireMemory(uint16_t id);
 AcquireMemory = shm.AcquireMemory
 AcquireMemory.argtypes = [c_uint16]
@@ -43,7 +44,6 @@ class ShmVar:
         self.m_id = uid
         self.m_dataType = sType
         self.m_addr = GetMemory(self.m_id, sizeof(self.m_dataType))
-        print(self.m_addr)
         self.m_obj = self.m_dataType.from_address(self.m_addr)
 
     def Set(self, data):
@@ -67,17 +67,19 @@ class ShmBigVar:
     def __init__(self, uid, structType):
         self.m_id = uid
         self.m_dataType = structType
-        RegisterMemory(self.m_id, sizeof(self.m_dataType))
-        self.m_obj = self.m_dataType.from_address(AcquireMemory(self.m_id))
-        ReleaseMemory(self.m_id)
+        self.m_obj = self.m_dataType.from_address(
+            RegisterMemory(self.m_id, sizeof(self.m_dataType)))
+
+    def GetVersion(self):
+        return int(GetMemoryVersion(self.m_id))
 
     def __enter__(self):
-        print('enter')
+        # print('enter')
         AcquireMemory(self.m_id)
         return self.m_obj
 
     def __exit__(self, Type, value, traceback):
-        print('exit')
+        # print('exit')
         ReleaseMemory(self.m_id)
 
 
