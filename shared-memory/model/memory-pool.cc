@@ -1,12 +1,29 @@
-/* -*- Mode:C; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Pengyu Liu <eic_lpy@hust.edu.cn>
+ */
 #include <unistd.h>
 #include <sys/ipc.h>
 #include "ns3/global-value.h"
 #include "ns3/uinteger.h"
+#include "ns3/log.h"
 #include "memory-pool.h"
 
 namespace ns3 {
-
+NS_LOG_COMPONENT_DEFINE ("ShmPool");
 GlobalValue gSharedMemoryPoolSize =
     GlobalValue ("SharedMemoryPoolSize", "Shared Memory Pool Size", UintegerValue (4096),
                  MakeUintegerChecker<uint32_t> ());
@@ -15,11 +32,14 @@ GlobalValue gSharedMemoryKey = GlobalValue ("SharedMemoryKey", "Shared Memory Ke
 
 SharedMemoryPool::SharedMemoryPool (void)
 {
+  NS_LOG_FUNCTION (this);
   UintegerValue uv;
   gSharedMemoryPoolSize.GetValue (uv);
   m_memoryPoolSize = uv.Get ();
   gSharedMemoryKey.GetValue (uv);
   m_memoryKey = uv.Get ();
+  NS_LOG_INFO ("Key: " << m_memoryKey << " Size: " << m_memoryPoolSize);
+
   memset (m_memoryCtrlInfo, 0, sizeof (m_memoryCtrlInfo));
   memset (m_memoryLocker, 0, sizeof (m_memoryLocker));
   m_ctrlBlockSize = sizeof (SharedMemoryCtrl);
@@ -35,12 +55,12 @@ SharedMemoryPool::SharedMemoryPool (void)
   m_isCreator = getpid () == m_shmds.shm_cpid;
   if (m_isCreator)
     {
-      // puts("Creator");
+      NS_LOG_INFO ("Creator");
       memset (m_memoryPoolPtr, 0, m_memoryPoolSize);
     }
   else
     {
-      // puts("User");
+      NS_LOG_INFO ("User");
       sleep (1);
     }
 
@@ -71,6 +91,7 @@ SharedMemoryPool::~SharedMemoryPool (void)
 void
 SharedMemoryPool::FreeMemory (void)
 {
+  NS_LOG_FUNCTION (this);
   if (!m_isCreator)
     return;
   shmctl (m_shmid, IPC_STAT, &m_shmds);
@@ -95,6 +116,7 @@ SharedMemoryPool::CtrlInfoUnlock (void)
 void *
 SharedMemoryPool::GetMemory (uint16_t id, uint32_t size)
 {
+  NS_LOG_FUNCTION (this << "ID: " << id << " Size: " << size);
   NS_ASSERT_MSG (id < SHM_MAX_KEY_ID, "Id out of range");
   CtrlInfoLock ();
   if (m_ctrlInfo->ctrlInfoVersion != m_currentVersion)
@@ -146,6 +168,7 @@ SharedMemoryPool::GetMemory (uint16_t id, uint32_t size)
 void *
 SharedMemoryPool::RegisterMemory (uint16_t id, uint32_t size)
 {
+  NS_LOG_FUNCTION (this << "ID: " << id << " Size: " << size);
   m_memoryLocker[id] =
       (SharedMemoryLockable *) GetMemory (id, size + sizeof (SharedMemoryLockable));
   return m_memoryLocker[id]->mem;
@@ -153,6 +176,7 @@ SharedMemoryPool::RegisterMemory (uint16_t id, uint32_t size)
 
 void *SharedMemoryPool::AcquireMemory (uint16_t id) //Should register first
 {
+  NS_LOG_FUNCTION (this << "ID: " << id);
   SharedMemoryLockable *info = m_memoryLocker[id];
   while (
       !__sync_bool_compare_and_swap (&info->preVersion, info->version, info->version + (uint8_t) 1))
@@ -162,10 +186,21 @@ void *SharedMemoryPool::AcquireMemory (uint16_t id) //Should register first
 
 void SharedMemoryPool::ReleaseMemory (uint16_t id) //Should register first
 {
+  NS_LOG_FUNCTION (this << "ID: " << id);
   SharedMemoryLockable *info = m_memoryLocker[id];
   NS_ASSERT_MSG (__sync_bool_compare_and_swap (&info->version, info->preVersion - (uint8_t) 1,
                                                info->preVersion),
                  "Lock status error");
+}
+
+void
+SharedMemoryPool::ReleaseMemoryAndRollback (uint16_t id)
+{
+  NS_LOG_FUNCTION (this << "ID: " << id);
+  SharedMemoryLockable *info = m_memoryLocker[id];
+  NS_ASSERT_MSG (
+      __sync_bool_compare_and_swap (&info->preVersion, info->version + (uint8_t) 1, info->version),
+      "Lock status error");
 }
 
 uint8_t
