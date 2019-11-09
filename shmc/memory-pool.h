@@ -50,4 +50,5 @@ void *GetMemory(uint16_t id, uint32_t size);
 void *RegisterMemory(uint16_t id, uint32_t size);
 void *AcquireMemory(uint16_t id);
 void ReleaseMemory(uint16_t id);
+void ReleaseMemoryAndRollback (uint16_t id);
 uint8_t GetMemoryVersion(uint8_t id);

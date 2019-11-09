@@ -1,5 +1,5 @@
 import shm_pool
-from shm_pool import Init, FreeMemory, GetMemory, RegisterMemory, AcquireMemory, ReleaseMemory, GetMemoryVersion
+from shm_pool import Init, FreeMemory, GetMemory, RegisterMemory, AcquireMemory, ReleaseMemory, ReleaseMemoryRB, GetMemoryVersion
 from ctypes import *
 
 READABLE = 0xff
@@ -57,7 +57,8 @@ class ShmBigVar:
         ReleaseMemory(self.m_id)
 
 
-__all__ = ['Init', 'FreeMemory', 'ShmVar', 'ShmBigVar']
+__all__ = ['Init', 'FreeMemory', 'GetMemory', 'RegisterMemory', 'AcquireMemory',
+           'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'ShmVar', 'ShmBigVar']
 
 if __name__ == "__main__":
     Init(2333, 4096)

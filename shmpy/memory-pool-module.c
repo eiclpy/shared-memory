@@ -1,8 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 // #include "structmember.h"
-#include"memory-pool.h"
-
+#include "memory-pool.h"
 
 /* Module method table */
 static PyMethodDef MemoryPool_methods[] = {
@@ -30,6 +29,10 @@ static PyMethodDef MemoryPool_methods[] = {
      (PyCFunction)py_releaseMemory,
      METH_VARARGS,
      "Release memory of id"},
+    {"ReleaseMemoryRB",
+     (PyCFunction)py_releaseMemoryAndRollback,
+     METH_VARARGS,
+     "Release memory of id and roll back memory version"},
     {"GetMemoryVersion",
      (PyCFunction)py_getMemoryVersion,
      METH_VARARGS,

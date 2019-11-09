@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
-#include "Python.h"
 // #include "structmember.h"
 #include "memory-pool.h"
 
@@ -289,6 +288,23 @@ PyObject *py_releaseMemory(PyObject *self, PyObject *args)
     SharedMemoryLockable *info = gMemoryLocker[id];
     // Assertf(__sync_bool_compare_and_swap(&info->version, info->preVersion - (uint8_t)1, info->preVersion), "Lock %u status error", id);
     if (!__sync_bool_compare_and_swap(&info->version, info->preVersion - (uint8_t)1, info->preVersion))
+    {
+        PyErr_Format(PyExc_RuntimeError, "Lock %u status error", id);
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+// void ReleaseMemoryAndRollback(uint16_t id)
+PyObject *py_releaseMemoryAndRollback(PyObject *self, PyObject *args)
+{
+    uint16_t id;
+    if (!PyArg_ParseTuple(args, "H", &id))
+        return NULL;
+
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    // Assertf(__sync_bool_compare_and_swap(&info->preVersion, info->version + (uint8_t)1, info->version), "Lock %u status error", id);
+    if (!__sync_bool_compare_and_swap(&info->preVersion, info->version + (uint8_t)1, info->version))
     {
         PyErr_Format(PyExc_RuntimeError, "Lock %u status error", id);
         return NULL;

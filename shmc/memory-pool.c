@@ -151,6 +151,12 @@ void ReleaseMemory(uint16_t id) //Should register first
     Assertf(__sync_bool_compare_and_swap(&info->version, info->preVersion - (uint8_t)1, info->preVersion), "Lock %u status error", id);
 }
 
+void ReleaseMemoryAndRollback(uint16_t id)
+{
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    Assertf(__sync_bool_compare_and_swap(&info->preVersion, info->version + (uint8_t)1, info->version), "Lock %u status error", id);
+}
+
 uint8_t GetMemoryVersion(uint8_t id)
 {
     return gMemoryLocker[id]->version;

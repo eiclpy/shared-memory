@@ -50,4 +50,5 @@ extern "C" void *GetMemory(uint16_t id, uint32_t size);
 extern "C" void *RegisterMemory(uint16_t id, uint32_t size);
 extern "C" void *AcquireMemory(uint16_t id);
 extern "C" void ReleaseMemory(uint16_t id);
+extern "C" void ReleaseMemoryAndRollback (uint16_t id);
 extern "C" uint8_t GetMemoryVersion(uint8_t id);

@@ -2,6 +2,7 @@
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
+#include "Python.h"
 
 #define MAX_ID 16384
 #define Packed __attribute__((__packed__))
@@ -45,4 +46,5 @@ PyObject *py_getMemory(PyObject *self, PyObject *args);
 PyObject *py_regMemory(PyObject *self, PyObject *args);
 PyObject *py_acquireMemory(PyObject *self, PyObject *args);
 PyObject *py_releaseMemory(PyObject *self, PyObject *args);
+PyObject *py_releaseMemoryAndRollback(PyObject *self, PyObject *args);
 PyObject *py_getMemoryVersion(PyObject *self, PyObject *args);
