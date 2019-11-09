@@ -204,7 +204,7 @@ SharedMemoryPool::ReleaseMemoryAndRollback (uint16_t id)
 }
 
 uint8_t
-SharedMemoryPool::GetMemoryVersion (uint8_t id)
+SharedMemoryPool::GetMemoryVersion (uint16_t id)
 {
   return m_memoryLocker[id]->version;
 }

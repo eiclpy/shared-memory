@@ -16,6 +16,7 @@
  * Author: Pengyu Liu <eic_lpy@hust.edu.cn>
  */
 #pragma once
+#include "ns3/simple-ref-count.h"
 #include "memory-pool.h"
 namespace ns3 {
 struct RLBaseInfo
@@ -23,7 +24,7 @@ struct RLBaseInfo
   bool isFinish;
 };
 template <typename EnvType, typename ActionType, typename SimInfoType = RLBaseInfo>
-class ShmRL
+class ShmRL : public SimpleRefCount<ShmRL<EnvType, ActionType, SimInfoType>>
 {
 protected:
   uint8_t *m_baseAddr;
@@ -46,13 +47,14 @@ public:
   ActionType *ActionSetter (void); //Get pointer to modify action
   SimInfoType *InfoSetter (void); //Get pointer to modify info
   void SetCompleted (void); //modification completed
+  uint8_t GetVersion (void);
 };
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 ShmRL<EnvType, ActionType, SimInfoType>::ShmRL (uint16_t id)
 {
   m_id = id;
-  m_baseAddr = SharedMemoryPool::Get ()->RegisterMemory (
+  m_baseAddr = (uint8_t *) SharedMemoryPool::Get ()->RegisterMemory (
       id, sizeof (EnvType) + sizeof (ActionType) + sizeof (RLBaseInfo));
   m_env = (EnvType *) m_baseAddr;
   m_act = (ActionType *) (m_baseAddr + sizeof (EnvType));
@@ -65,11 +67,21 @@ ShmRL<EnvType, ActionType, SimInfoType>::~ShmRL (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+uint8_t
+ShmRL<EnvType, ActionType, SimInfoType>::GetVersion (void)
+{
+  return SharedMemoryPool::Get ()->GetMemoryVersion (m_id);
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
 EnvType *
 ShmRL<EnvType, ActionType, SimInfoType>::EnvGetter (void)
 {
   if (!m_locked)
-    SharedMemoryPool::Get ()->AcquireMemory (m_id);
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_env;
 }
 
@@ -78,7 +90,10 @@ ActionType *
 ShmRL<EnvType, ActionType, SimInfoType>::ActionGetter (void)
 {
   if (!m_locked)
-    SharedMemoryPool::Get ()->AcquireMemory (m_id);
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_act;
 }
 
@@ -87,7 +102,10 @@ SimInfoType *
 ShmRL<EnvType, ActionType, SimInfoType>::InfoGetter (void)
 {
   if (!m_locked)
-    SharedMemoryPool::Get ()->AcquireMemory (m_id);
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_info;
 }
 
@@ -96,14 +114,21 @@ void
 ShmRL<EnvType, ActionType, SimInfoType>::GetCompleted (void)
 {
   if (m_locked)
-    SharedMemoryPool::Get ()->ReleaseMemoryAndRollback (m_id);
+    {
+      SharedMemoryPool::Get ()->ReleaseMemoryAndRollback (m_id);
+      m_locked = false;
+    }
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 EnvType *
 ShmRL<EnvType, ActionType, SimInfoType>::EnvSetter (void)
 {
-  SharedMemoryPool::Get ()->AcquireMemory (m_id);
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_env;
 }
 
@@ -111,7 +136,11 @@ template <typename EnvType, typename ActionType, typename SimInfoType>
 ActionType *
 ShmRL<EnvType, ActionType, SimInfoType>::ActionSetter (void)
 {
-  SharedMemoryPool::Get ()->AcquireMemory (m_id);
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_act;
 }
 
@@ -119,7 +148,11 @@ template <typename EnvType, typename ActionType, typename SimInfoType>
 SimInfoType *
 ShmRL<EnvType, ActionType, SimInfoType>::InfoSetter (void)
 {
-  SharedMemoryPool::Get ()->AcquireMemory (m_id);
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
   return m_info;
 }
 
@@ -127,7 +160,11 @@ template <typename EnvType, typename ActionType, typename SimInfoType>
 void
 ShmRL<EnvType, ActionType, SimInfoType>::SetCompleted (void)
 {
-  SharedMemoryPool::Get ()->ReleaseMemory (m_id);
+  if (m_locked)
+    {
+      SharedMemoryPool::Get ()->ReleaseMemory (m_id);
+      m_locked = false;
+    }
 }
 
 } // namespace ns3

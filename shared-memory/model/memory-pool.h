@@ -80,7 +80,7 @@ public:
   void *AcquireMemory (uint16_t id);
   void ReleaseMemory (uint16_t id);
   void ReleaseMemoryAndRollback (uint16_t id);
-  uint8_t GetMemoryVersion (uint8_t id);
+  uint8_t GetMemoryVersion (uint16_t id);
 };
 
 } // namespace ns3
