@@ -19,20 +19,21 @@
 #include "ns3/simple-ref-count.h"
 #include "memory-pool.h"
 namespace ns3 {
-struct RLBaseInfo
+struct RLEmptyInfo
 {
-  bool isFinish;
 };
-template <typename EnvType, typename ActionType, typename SimInfoType = RLBaseInfo>
+template <typename EnvType, typename ActionType, typename SimInfoType = RLEmptyInfo>
 class ShmRL : public SimpleRefCount<ShmRL<EnvType, ActionType, SimInfoType>>
 {
 protected:
+  uint32_t m_memSize;
   uint8_t *m_baseAddr;
   EnvType *m_env;
   ActionType *m_act;
   SimInfoType *m_info;
   uint16_t m_id;
   bool m_locked{false};
+  bool *m_isFinish;
 
 public:
   ShmRL (void) = delete;
@@ -48,17 +49,21 @@ public:
   SimInfoType *InfoSetter (void); //Get pointer to modify info
   void SetCompleted (void); //modification completed
   uint8_t GetVersion (void);
+  void SetFinish (void);
+  bool GetIsFinish (void);
 };
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 ShmRL<EnvType, ActionType, SimInfoType>::ShmRL (uint16_t id)
 {
   m_id = id;
-  m_baseAddr = (uint8_t *) SharedMemoryPool::Get ()->RegisterMemory (
-      id, sizeof (EnvType) + sizeof (ActionType) + sizeof (RLBaseInfo));
+  m_memSize = sizeof (EnvType) + sizeof (ActionType) + sizeof (SimInfoType) + sizeof (bool);
+  m_baseAddr = (uint8_t *) SharedMemoryPool::Get ()->RegisterMemory (id, m_memSize);
   m_env = (EnvType *) m_baseAddr;
   m_act = (ActionType *) (m_baseAddr + sizeof (EnvType));
-  m_info = (RLBaseInfo *) (m_baseAddr + sizeof (EnvType) + sizeof (ActionType));
+  m_info = (SimInfoType *) (m_baseAddr + sizeof (EnvType) + sizeof (ActionType));
+  m_isFinish =
+      (bool *) (m_baseAddr + sizeof (EnvType) + sizeof (ActionType) + sizeof (SimInfoType));
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
@@ -165,6 +170,28 @@ ShmRL<EnvType, ActionType, SimInfoType>::SetCompleted (void)
       SharedMemoryPool::Get ()->ReleaseMemory (m_id);
       m_locked = false;
     }
+}
+template <typename EnvType, typename ActionType, typename SimInfoType>
+void
+ShmRL<EnvType, ActionType, SimInfoType>::SetFinish (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemory (m_id);
+      m_locked = true;
+    }
+  *m_isFinish = true;
+  if (m_locked)
+    {
+      SharedMemoryPool::Get ()->ReleaseMemory (m_id);
+      m_locked = false;
+    }
+}
+template <typename EnvType, typename ActionType, typename SimInfoType>
+bool
+ShmRL<EnvType, ActionType, SimInfoType>::GetIsFinish (void)
+{
+  return *m_isFinish;
 }
 
 } // namespace ns3

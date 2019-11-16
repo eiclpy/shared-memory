@@ -1,5 +1,6 @@
 import shm_pool
-from shm_pool import Init, FreeMemory, GetMemory, RegisterMemory, AcquireMemory, ReleaseMemory, ReleaseMemoryRB, GetMemoryVersion
+from shm_pool import Init, FreeMemory, GetMemory, RegisterMemory, AcquireMemory, AcquireMemoryCond,\
+    AcquireMemoryTarget, AcquireMemoryCondFunc, ReleaseMemory, ReleaseMemoryRB, GetMemoryVersion, IncMemoryVersion
 from ctypes import *
 
 READABLE = 0xff
@@ -57,8 +58,45 @@ class ShmBigVar:
         ReleaseMemory(self.m_id)
 
 
-__all__ = ['Init', 'FreeMemory', 'GetMemory', 'RegisterMemory', 'AcquireMemory',
-           'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'ShmVar', 'ShmBigVar']
+class RLEmptyInfo(Structure):
+    _pack_ = 1
+    _fields_ = []
+
+
+class ShmRL:
+    def __init__(self, uid, EnvType, ActType, ExtInfo=RLEmptyInfo):
+        assert issubclass(EnvType, Structure)
+        assert issubclass(ActType, Structure)
+        assert issubclass(ExtInfo, Structure)
+
+        self.m_id = uid
+        self.envType = EnvType
+        self.actType = ActType
+        self.extInfo = ExtInfo
+
+        class StorageType(Structure):
+            _pack_ = 1
+            _fields_ = [
+                ('env', self.envType),
+                ('act', self.actType),
+                ('ext', self.extInfo),
+                ('isFinish', c_bool)
+            ]
+        self.type = StorageType
+        self.m_obj = self.type.from_address(
+            RegisterMemory(self.m_id, sizeof(self.type)))
+
+    def __enter__(self):
+        AcquireMemory(self.m_id)
+        return self.m_obj
+
+    def __exit__(self, Type, value, traceback):
+        ReleaseMemory(self.m_id)
+
+
+__all__ = ['Init', 'FreeMemory', 'GetMemory', 'RegisterMemory',
+           'AcquireMemory', 'AcquireMemoryCond', 'AcquireMemoryTarget', 'AcquireMemoryCondFunc',
+           'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'IncMemoryVersion', 'ShmVar', 'ShmBigVar']
 
 if __name__ == "__main__":
     Init(2333, 4096)

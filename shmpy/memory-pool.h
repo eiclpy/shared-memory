@@ -45,6 +45,10 @@ PyObject *py_freeMemory(PyObject *self);
 PyObject *py_getMemory(PyObject *self, PyObject *args);
 PyObject *py_regMemory(PyObject *self, PyObject *args);
 PyObject *py_acquireMemory(PyObject *self, PyObject *args);
+PyObject *py_acquireMemoryCond(PyObject *self, PyObject *args);
+PyObject *py_acquireMemoryTarget(PyObject *self, PyObject *args);
+PyObject *py_acquireMemoryCondFunc(PyObject *self, PyObject *args); // Not suggest
 PyObject *py_releaseMemory(PyObject *self, PyObject *args);
 PyObject *py_releaseMemoryAndRollback(PyObject *self, PyObject *args);
 PyObject *py_getMemoryVersion(PyObject *self, PyObject *args);
+PyObject *py_incMemoryVersion(PyObject *self, PyObject *args);

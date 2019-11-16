@@ -277,6 +277,70 @@ PyObject *py_acquireMemory(PyObject *self, PyObject *args)
     return Py_BuildValue("K", (unsigned long long)info->mem);
 }
 
+// void *AcquireMemoryCond(uint16_t id, uint8_t mod, uint8_t res)
+PyObject *py_acquireMemoryCond(PyObject *self, PyObject *args)
+{
+    uint16_t id;
+    uint8_t mod;
+    uint8_t res;
+    if (!PyArg_ParseTuple(args, "HBB", &id, &mod, &res))
+    {
+        return NULL;
+    }
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    while (info->version % mod != res)
+        ;
+    while (!__sync_bool_compare_and_swap(&info->preVersion, info->version, info->version + (uint8_t)1))
+        ;
+    return Py_BuildValue("K", (unsigned long long)info->mem);
+}
+
+// void *AcquireMemoryTarget(uint16_t id, uint8_t tar)
+PyObject *py_acquireMemoryTarget(PyObject *self, PyObject *args)
+{
+    uint16_t id;
+    uint8_t tar;
+    if (!PyArg_ParseTuple(args, "HB", &id, &tar))
+    {
+        return NULL;
+    }
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    while (info->version != tar)
+        ;
+    while (!__sync_bool_compare_and_swap(&info->preVersion, info->version, info->version + (uint8_t)1))
+        ;
+    return Py_BuildValue("K", (unsigned long long)info->mem);
+}
+
+// void *AcquireMemoryCondFunc(uint16_t id, bool (*cond)(uint8_t version))
+PyObject *py_acquireMemoryCondFunc(PyObject *self, PyObject *args)
+{
+    uint16_t id;
+    PyObject *cond;
+    if (!PyArg_ParseTuple(args, "HO", &id, &cond))
+    {
+        return NULL;
+    }
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    while (true)
+    {
+        PyObject *ret = PyObject_CallObject(cond, Py_BuildValue("B", info->version));
+        uint16_t con;
+        if (!PyArg_ParseTuple(ret, "H", &con))
+        {
+            return NULL;
+        }
+        if (con)
+        {
+            break;
+        }
+    }
+
+    while (!__sync_bool_compare_and_swap(&info->preVersion, info->version, info->version + (uint8_t)1))
+        ;
+    return Py_BuildValue("K", (unsigned long long)info->mem);
+}
+
 // void ReleaseMemory(uint16_t id) //Should register first
 PyObject *py_releaseMemory(PyObject *self, PyObject *args)
 {
@@ -321,4 +385,19 @@ PyObject *py_getMemoryVersion(PyObject *self, PyObject *args)
         return NULL;
     }
     return Py_BuildValue("B", gMemoryLocker[id]->version);
+}
+
+// void IncMemoryVersion(uint16_t id)
+PyObject *py_incMemoryVersion(PyObject *self, PyObject *args)
+{
+    uint16_t id;
+    if (!PyArg_ParseTuple(args, "H", &id))
+    {
+        return NULL;
+    }
+    SharedMemoryLockable *info = gMemoryLocker[id];
+    while (!__sync_bool_compare_and_swap(&info->preVersion, info->version, info->version + (uint8_t)1))
+        ;
+    Assertf(__sync_bool_compare_and_swap(&info->preVersion, info->version + (uint8_t)1, info->version), "Lock %u status error", id);
+    Py_RETURN_NONE;
 }

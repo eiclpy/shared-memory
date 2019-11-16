@@ -51,7 +51,7 @@ public:
 template <typename T>
 ShmVar<T>::ShmVar (int id)
 {
-  m_data = (Interface *) SharedMemoryPool::Get()->GetMemory (id, sizeof (Interface));
+  m_data = (Interface *) SharedMemoryPool::Get ()->GetMemory (id, sizeof (Interface));
   NS_ASSERT_MSG (m_data > 0, "memory pool full");
 }
 
@@ -67,7 +67,8 @@ ShmVar<T>::Get ()
   while (m_data->tagRd != READABLE)
     ;
   T ret = m_data->data;
-  NS_ASSERT_MSG (__sync_bool_compare_and_swap (&m_data->tagRd, READABLE, SETABLE), "Tag status error");
+  NS_ASSERT_MSG (__sync_bool_compare_and_swap (&m_data->tagRd, READABLE, SETABLE),
+                 "Tag status error");
   return ret;
 }
 template <typename T>
@@ -77,7 +78,8 @@ ShmVar<T>::Set (T data)
   while (m_data->tagWt != SETABLE)
     ;
   m_data->data = data;
-  NS_ASSERT_MSG (__sync_bool_compare_and_swap (&m_data->tagWt, SETABLE, READABLE), "Tag status error");
+  NS_ASSERT_MSG (__sync_bool_compare_and_swap (&m_data->tagWt, SETABLE, READABLE),
+                 "Tag status error");
 }
 
 } // namespace ns3

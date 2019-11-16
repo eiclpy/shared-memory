@@ -184,6 +184,42 @@ void *SharedMemoryPool::AcquireMemory (uint16_t id) //Should register first
   return info->mem;
 }
 
+void *
+SharedMemoryPool::AcquireMemoryCond (uint16_t id, uint8_t mod, uint8_t res)
+{
+  SharedMemoryLockable *info = m_memoryLocker[id];
+  while (info->version % mod != res)
+    ;
+  while (
+      !__sync_bool_compare_and_swap (&info->preVersion, info->version, info->version + (uint8_t) 1))
+    ;
+  return info->mem;
+}
+
+void *
+SharedMemoryPool::AcquireMemoryTarget (uint16_t id, uint8_t tar)
+{
+  SharedMemoryLockable *info = m_memoryLocker[id];
+  while (info->version != tar)
+    ;
+  while (
+      !__sync_bool_compare_and_swap (&info->preVersion, info->version, info->version + (uint8_t) 1))
+    ;
+  return info->mem;
+}
+
+void *
+SharedMemoryPool::AcquireMemoryCondFunc (uint16_t id, bool (*cond) (uint8_t version))
+{
+  SharedMemoryLockable *info = m_memoryLocker[id];
+  while (!cond (info->version))
+    ;
+  while (
+      !__sync_bool_compare_and_swap (&info->preVersion, info->version, info->version + (uint8_t) 1))
+    ;
+  return info->mem;
+}
+
 void SharedMemoryPool::ReleaseMemory (uint16_t id) //Should register first
 {
   NS_LOG_FUNCTION (this << "ID: " << id);
@@ -208,4 +244,17 @@ SharedMemoryPool::GetMemoryVersion (uint16_t id)
 {
   return m_memoryLocker[id]->version;
 }
+
+void
+SharedMemoryPool::IncMemoryVersion (uint16_t id)
+{
+  SharedMemoryLockable *info = m_memoryLocker[id];
+  while (
+      !__sync_bool_compare_and_swap (&info->preVersion, info->version, info->version + (uint8_t) 1))
+    ;
+  NS_ASSERT_MSG (
+      __sync_bool_compare_and_swap (&info->preVersion, info->version + (uint8_t) 1, info->version),
+      "Lock status error");
+}
+
 } // namespace ns3

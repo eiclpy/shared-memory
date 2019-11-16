@@ -78,9 +78,13 @@ public:
   void *GetMemory (uint16_t id, uint32_t size);
   void *RegisterMemory (uint16_t id, uint32_t size);
   void *AcquireMemory (uint16_t id);
+  void *AcquireMemoryCond (uint16_t id, uint8_t mod, uint8_t res);
+  void *AcquireMemoryTarget (uint16_t id, uint8_t tar);
+  void *AcquireMemoryCondFunc (uint16_t id, bool (*cond) (uint8_t version));
   void ReleaseMemory (uint16_t id);
   void ReleaseMemoryAndRollback (uint16_t id);
   uint8_t GetMemoryVersion (uint16_t id);
+  void IncMemoryVersion (uint16_t id);
 };
 
 } // namespace ns3
