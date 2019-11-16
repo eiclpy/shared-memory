@@ -35,19 +35,44 @@ protected:
   bool m_locked{false};
   bool *m_isFinish;
 
+  uint8_t m_mod;
+  uint8_t m_res;
+  bool (*m_cond) (uint8_t version);
+
 public:
   ShmRL (void) = delete;
   ShmRL (uint16_t id); //Construct and allocate memory
   ~ShmRL (void);
+  void SetCond (uint8_t mod, uint8_t res);
+  void SetCondFunc (bool (*cond) (uint8_t version));
   EnvType *EnvGetter (void); //Get env pointer for reading
+  EnvType *EnvGetterCond (void); //Get env pointer for reading
+  EnvType *EnvGetterTarget (uint8_t tar); //Get env pointer for reading
+  EnvType *EnvGetterCondFunc (void); //Get env pointer for reading
   ActionType *ActionGetter (void); //Get action pointer for reading
+  ActionType *ActionGetterCond (void); //Get action pointer for reading
+  ActionType *ActionGetterTarget (uint8_t tar); //Get action pointer for reading
+  ActionType *ActionGetterCondFunc (void); //Get action pointer for reading
   SimInfoType *InfoGetter (void); //Get simulation info pointer for reading
+  SimInfoType *InfoGetterCond (void); //Get simulation info pointer for reading
+  SimInfoType *InfoGetterTarget (uint8_t tar); //Get simulation info pointer for reading
+  SimInfoType *InfoGetterCondFunc (void); //Get simulation info pointer for reading
   void GetCompleted (void); //read completed
 
   EnvType *EnvSetter (void); //Get pointer to modify env
+  EnvType *EnvSetterCond (void); //Get pointer to modify env
+  EnvType *EnvSetterTarget (uint8_t tar); //Get pointer to modify env
+  EnvType *EnvSetterCondFunc (void); //Get pointer to modify env
   ActionType *ActionSetter (void); //Get pointer to modify action
+  ActionType *ActionSetterCond (void); //Get pointer to modify action
+  ActionType *ActionSetterTarget (uint8_t tar); //Get pointer to modify action
+  ActionType *ActionSetterCondFunc (void); //Get pointer to modify action
   SimInfoType *InfoSetter (void); //Get pointer to modify info
+  SimInfoType *InfoSetterCond (void); //Get pointer to modify info
+  SimInfoType *InfoSetterTarget (uint8_t tar); //Get pointer to modify info
+  SimInfoType *InfoSetterCondFunc (void); //Get pointer to modify info
   void SetCompleted (void); //modification completed
+
   uint8_t GetVersion (void); //get memory version
   void SetFinish (void); //set simulation finish
   bool GetIsFinish (void);
@@ -56,6 +81,9 @@ public:
 template <typename EnvType, typename ActionType, typename SimInfoType>
 ShmRL<EnvType, ActionType, SimInfoType>::ShmRL (uint16_t id)
 {
+  m_mod = 2;
+  m_res = 0;
+  m_cond = NULL;
   m_id = id;
   m_memSize = sizeof (EnvType) + sizeof (ActionType) + sizeof (SimInfoType) + sizeof (bool);
   m_baseAddr = (uint8_t *) SharedMemoryPool::Get ()->RegisterMemory (id, m_memSize);
@@ -72,11 +100,27 @@ ShmRL<EnvType, ActionType, SimInfoType>::~ShmRL (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+void
+ShmRL<EnvType, ActionType, SimInfoType>::SetCond (uint8_t mod, uint8_t res)
+{
+  m_mod = mod;
+  m_res = res;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+void
+ShmRL<EnvType, ActionType, SimInfoType>::SetCondFunc (bool (*cond) (uint8_t version))
+{
+  m_cond = cond;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
 uint8_t
 ShmRL<EnvType, ActionType, SimInfoType>::GetVersion (void)
 {
   return SharedMemoryPool::Get ()->GetMemoryVersion (m_id);
 }
+////////////////////////////////////////////////////////////////////////////////////EnvGetter
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 EnvType *
@@ -91,6 +135,43 @@ ShmRL<EnvType, ActionType, SimInfoType>::EnvGetter (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvGetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_env;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvGetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_env;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvGetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_env;
+}
+////////////////////////////////////////////////////////////////////////////////////ActGetter
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
 ActionType *
 ShmRL<EnvType, ActionType, SimInfoType>::ActionGetter (void)
 {
@@ -101,6 +182,43 @@ ShmRL<EnvType, ActionType, SimInfoType>::ActionGetter (void)
     }
   return m_act;
 }
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionGetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_act;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionGetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_act;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionGetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_act;
+}
+////////////////////////////////////////////////////////////////////////////////////InfoGetter
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 SimInfoType *
@@ -115,6 +233,43 @@ ShmRL<EnvType, ActionType, SimInfoType>::InfoGetter (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoGetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_info;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoGetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_info;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoGetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_info;
+}
+////////////////////////////////////////////////////////////////////////////////////Get
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
 void
 ShmRL<EnvType, ActionType, SimInfoType>::GetCompleted (void)
 {
@@ -124,6 +279,7 @@ ShmRL<EnvType, ActionType, SimInfoType>::GetCompleted (void)
       m_locked = false;
     }
 }
+////////////////////////////////////////////////////////////////////////////////////EnvSetter
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
 EnvType *
@@ -138,6 +294,43 @@ ShmRL<EnvType, ActionType, SimInfoType>::EnvSetter (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvSetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_env;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvSetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_env;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+EnvType *
+ShmRL<EnvType, ActionType, SimInfoType>::EnvSetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_env;
+}
+////////////////////////////////////////////////////////////////////////////////////ActSetter
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
 ActionType *
 ShmRL<EnvType, ActionType, SimInfoType>::ActionSetter (void)
 {
@@ -150,6 +343,42 @@ ShmRL<EnvType, ActionType, SimInfoType>::ActionSetter (void)
 }
 
 template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionSetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_act;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionSetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_act;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+ActionType *
+ShmRL<EnvType, ActionType, SimInfoType>::ActionSetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_act;
+}
+////////////////////////////////////////////////////////////////////////////////////InfoSetter
+template <typename EnvType, typename ActionType, typename SimInfoType>
 SimInfoType *
 ShmRL<EnvType, ActionType, SimInfoType>::InfoSetter (void)
 {
@@ -161,6 +390,41 @@ ShmRL<EnvType, ActionType, SimInfoType>::InfoSetter (void)
   return m_info;
 }
 
+template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoSetterCond (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCond (m_id, m_mod, m_res);
+      m_locked = true;
+    }
+  return m_info;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoSetterTarget (uint8_t tar)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryTarget (m_id, tar);
+      m_locked = true;
+    }
+  return m_info;
+}
+
+template <typename EnvType, typename ActionType, typename SimInfoType>
+SimInfoType *
+ShmRL<EnvType, ActionType, SimInfoType>::InfoSetterCondFunc (void)
+{
+  if (!m_locked)
+    {
+      SharedMemoryPool::Get ()->AcquireMemoryCondFunc (m_id, m_cond);
+      m_locked = true;
+    }
+  return m_info;
+}
 template <typename EnvType, typename ActionType, typename SimInfoType>
 void
 ShmRL<EnvType, ActionType, SimInfoType>::SetCompleted (void)
