@@ -48,8 +48,8 @@ public:
   ActionType *ActionSetter (void); //Get pointer to modify action
   SimInfoType *InfoSetter (void); //Get pointer to modify info
   void SetCompleted (void); //modification completed
-  uint8_t GetVersion (void);
-  void SetFinish (void);
+  uint8_t GetVersion (void); //get memory version
+  void SetFinish (void); //set simulation finish
   bool GetIsFinish (void);
 };
 

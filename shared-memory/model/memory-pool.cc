@@ -78,7 +78,6 @@ SharedMemoryPool::SharedMemoryPool (void)
       --m_curCtrlInfo;
       NS_ASSERT_MSG (m_memoryCtrlInfo[m_curCtrlInfo->id] == 0, "Id has been used");
       m_memoryCtrlInfo[m_curCtrlInfo->id] = m_curCtrlInfo;
-      // printf("Load %u\n", m_curCtrlInfo->id);
     }
   m_currentVersion = m_ctrlInfo->ctrlInfoVersion;
   CtrlInfoUnlock ();
@@ -129,10 +128,7 @@ SharedMemoryPool::GetMemory (uint16_t id, uint32_t size)
               std::cerr << "Id " << m_curCtrlInfo->id << " has been used" << std::endl;
               NS_ABORT_MSG ("Id error");
             }
-          // NS_ASSERT_MSG (m_memoryCtrlInfo[m_curCtrlInfo->id] == 0, "Id %u has been used",
-          //                m_curCtrlInfo->id);
           m_memoryCtrlInfo[m_curCtrlInfo->id] = m_curCtrlInfo;
-          // printf("Load %u\n", m_curCtrlInfo->id);
         }
       m_currentVersion = m_ctrlInfo->ctrlInfoVersion;
     }
@@ -142,7 +138,6 @@ SharedMemoryPool::GetMemory (uint16_t id, uint32_t size)
       CtrlInfoUnlock ();
       return m_memoryPoolPtr + m_memoryCtrlInfo[id]->offset;
     };
-  // printf("Alloc id %u\n", id);
 
   NS_ASSERT_MSG (m_ctrlInfo->freeMemOffset + size <
                      m_memoryPoolSize - m_configLen -

@@ -76,13 +76,13 @@ public:
 
   void FreeMemory (void);
   void *GetMemory (uint16_t id, uint32_t size);
-  void *RegisterMemory (uint16_t id, uint32_t size);
+  void *RegisterMemory (uint16_t id, uint32_t size); //register memory with verison in pool
   void *AcquireMemory (uint16_t id);
-  void *AcquireMemoryCond (uint16_t id, uint8_t mod, uint8_t res);
-  void *AcquireMemoryTarget (uint16_t id, uint8_t tar);
-  void *AcquireMemoryCondFunc (uint16_t id, bool (*cond) (uint8_t version));
-  void ReleaseMemory (uint16_t id);
-  void ReleaseMemoryAndRollback (uint16_t id);
+  void *AcquireMemoryCond (uint16_t id, uint8_t mod, uint8_t res); //acquire memory if version%mod==res
+  void *AcquireMemoryTarget (uint16_t id, uint8_t tar); //acquire memory if memory version is tar
+  void *AcquireMemoryCondFunc (uint16_t id, bool (*cond) (uint8_t version)); //acquire memory if condition function return true
+  void ReleaseMemory (uint16_t id); //release memory
+  void ReleaseMemoryAndRollback (uint16_t id); //release memory and roll back version
   uint8_t GetMemoryVersion (uint16_t id);
   void IncMemoryVersion (uint16_t id);
 };
