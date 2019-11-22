@@ -21,8 +21,9 @@ def build(bld):
     headers.module = 'shared-memory'
     headers.source = [
         'model/memory-pool.h',
-        'model/shm-var.h',
-        'model/shm-rl.h',
+        'model/tarin-var.h',
+        'model/ns3-ai-rl.h',
+        'model/ns3-ai-dl.h',
         ]
 
     # if bld.env.ENABLE_EXAMPLES:

@@ -39,8 +39,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t version;
-    uint8_t preVersion;
+    volatile uint8_t version;
+    volatile uint8_t preVersion;
     uint8_t mem[0];
 } Packed SharedMemoryLockable;
 

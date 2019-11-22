@@ -1,5 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
+ * Copyright (c) 2019 Huazhong University of Science and Technology, Dian Group
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
@@ -29,7 +31,7 @@ namespace ns3 {
 适用于小型数据
 */
 template <typename T>
-class ShmVar
+class TrainVar
 {
 public:
   struct Interface
@@ -41,28 +43,28 @@ public:
   Interface *m_data;
 
 public:
-  ShmVar () = delete;
-  ShmVar (int id);
-  ~ShmVar ();
+  TrainVar () = delete;
+  TrainVar (int id);
+  ~TrainVar ();
   T Get ();
   void Set (T data);
 };
 
 template <typename T>
-ShmVar<T>::ShmVar (int id)
+TrainVar<T>::TrainVar (int id)
 {
   m_data = (Interface *) SharedMemoryPool::Get ()->GetMemory (id, sizeof (Interface));
   NS_ASSERT_MSG (m_data > 0, "memory pool full");
 }
 
 template <typename T>
-ShmVar<T>::~ShmVar ()
+TrainVar<T>::~TrainVar ()
 {
 }
 
 template <typename T>
 T
-ShmVar<T>::Get ()
+TrainVar<T>::Get ()
 {
   while (m_data->tagRd != READABLE)
     ;
@@ -73,7 +75,7 @@ ShmVar<T>::Get ()
 }
 template <typename T>
 void
-ShmVar<T>::Set (T data)
+TrainVar<T>::Set (T data)
 {
   while (m_data->tagWt != SETABLE)
     ;
