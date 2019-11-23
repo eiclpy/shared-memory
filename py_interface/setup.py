@@ -16,18 +16,13 @@
 #
 # Author: Pengyu Liu <eic_lpy@hust.edu.cn>
 
-try:
-    import setuptools as distutools
-except ImportError:
-    import distutils.core as distutools
+import setuptools
 
-name = "shm_pool"
-description = "Shm interface for Python"
-long_description = open("README.md", "r").read()
-author = "Pengyu Liu"
-author_email = "eic_lpy@hust.edu.cn"
+name = "ns3_ai"
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-extension = distutools.Extension("shm_pool",
+extension = setuptools.Extension("shm_pool",
                                  ["memory-pool.c", "memory-pool-module.c"],
                                  # extra_compile_args=['-E'],
                                  depends=[
@@ -38,12 +33,20 @@ extension = distutools.Extension("shm_pool",
                                  ],
                                  )
 
-distutools.setup(name=name,
+setuptools.setup(name=name,
                  version='0.0.1',
-                 description=description,
+                 description="NS-3 AI interface for Python",
                  long_description=long_description,
-                 author=author,
-                 author_email=author_email,
+                 long_description_content_type="text/markdown",
+                 author="Pengyu Liu",
+                 author_email="eic_lpy@hust.edu.cn",
+                 url="placeholder",
+                 packages=setuptools.find_packages(),
+                 classifiers=[
+                    "Programming Language :: Python :: 3",
+                    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+                    "Operating System :: POSIX :: Linux",
+                 ],
                  py_modules=['py_interface'],
                  ext_modules=[extension]
                  )

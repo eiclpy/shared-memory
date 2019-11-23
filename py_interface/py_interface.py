@@ -141,11 +141,3 @@ __all__ = ['Init', 'FreeMemory', 'GetMemory', 'RegisterMemory',
            'AcquireMemory', 'AcquireMemoryCond', 'AcquireMemoryTarget', 'AcquireMemoryCondFunc',
            'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'IncMemoryVersion', 'ShmVar', 'ShmBigVar', 'ShmRL']
 
-if __name__ == "__main__":
-    Init(2333, 4096)
-    v = ShmBigVar(233, c_int*10)
-    with v as o:
-        for i in range(10):
-            o[i] = c_int(i)
-        print(*o)
-    FreeMemory()

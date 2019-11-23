@@ -1,4 +1,4 @@
-# Shared memory Python interface
+# NS-3 AI Python interface
 # Install
 ```bash
 python setup.py install --user
