@@ -17,7 +17,7 @@ def build(bld):
         ]
 
     headers = bld(features='ns3header')
-    headers.module = 'shared-memory'
+    headers.module = 'ns3-ai'
     headers.source = [
         'model/memory-pool.h',
         'model/train-var.h',
