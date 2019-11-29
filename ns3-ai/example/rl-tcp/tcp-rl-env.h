@@ -3,9 +3,9 @@
 #include "ns3/network-module.h"
 #include "ns3/tcp-header.h"
 #include "ns3/tcp-socket-base.h"
-#include "ns3/shared-memory-module.h"
+#include "ns3/ns3-ai-module.h"
 namespace ns3 {
-struct TcpRlEnv
+struct sTcpRlEnv
 {
   uint32_t nodeId;
   uint32_t socketUid;
@@ -35,11 +35,11 @@ struct TcpRlAct
 //   CONGESTION_STATE_SET,
 //   CWND_EVENT,
 // } CalledFunc_t;
-class TcpRlShmEnv : public ShmRL<TcpRlEnv, TcpRlAct>
+class TcpRlEnv : public Ns3AIRL<sTcpRlEnv, TcpRlAct>
 {
 public:
-  TcpRlShmEnv () = delete;
-  TcpRlShmEnv (uint16_t id);
+  TcpRlEnv () = delete;
+  TcpRlEnv (uint16_t id);
   void SetNodeId (uint32_t id);
   void SetSocketUuid (uint32_t id);
   void TxPktTrace (Ptr<const Packet>, const TcpHeader &, Ptr<const TcpSocketBase>);
@@ -71,7 +71,7 @@ protected:
   uint32_t m_new_cWnd;
 };
 
-// class TcpEventShmEnv : public TcpRlShmEnv
+// class TcpEventEnv : public TcpRlEnv
 // {
 // public:
 //   void SetReward (float value);
@@ -103,11 +103,11 @@ protected:
 //   float m_penalty;
 // };
 
-class TcpTimeStepShmEnv : public TcpRlShmEnv
+class TcpTimeStepEnv : public TcpRlEnv
 {
 public:
-  TcpTimeStepShmEnv () = delete;
-  TcpTimeStepShmEnv (uint16_t id);
+  TcpTimeStepEnv () = delete;
+  TcpTimeStepEnv (uint16_t id);
   // trace packets, e.g. for calculating inter tx/rx time
   //   virtual void TxPktTrace(Ptr<const Packet>, const TcpHeader&, Ptr<const TcpSocketBase>);
   //   virtual void RxPktTrace(Ptr<const Packet>, const TcpHeader&, Ptr<const TcpSocketBase>);

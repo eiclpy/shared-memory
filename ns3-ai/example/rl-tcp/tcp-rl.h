@@ -3,7 +3,7 @@
 
 #include "ns3/tcp-congestion-ops.h"
 #include "ns3/tcp-socket-base.h"
-#include "tcp-rl-shm-env.h"
+#include "tcp-rl-env.h"
 
 namespace ns3 {
 
@@ -56,7 +56,7 @@ public:
 //   void ConnectSocketCallbacks();
 
 //   Ptr<TcpSocketBase> m_tcpSocket;
-//   // Ptr<TcpRlShmEnv> m_tcpRlShmEnv;
+//   // Ptr<TcpRlEnv> m_tcpRlEnv;
 // };
 
 // class TcpRl : public TcpRlBase
@@ -70,7 +70,7 @@ public:
 
 //   virtual std::string GetName () const;
 // private:
-//   virtual void CreateShmEnv();
+//   virtual void CreateEnv();
 //   // OpenGymEnv env
 //   float m_reward {1.0};
 //   float m_penalty {-100.0};
@@ -97,14 +97,14 @@ public:
 
 protected:
   static uint64_t GenerateUuid ();
-  virtual void CreateShmEnv ();
+  virtual void CreateEnv ();
   void ConnectSocketCallbacks ();
 
   bool m_cbConnect{false};
 
   Ptr<TcpSocketBase> m_tcpSocket{0};
 
-  Ptr<TcpTimeStepShmEnv> env;
+  Ptr<TcpTimeStepEnv> env;
   
   Time m_timeStep{MilliSeconds (100)};
 };

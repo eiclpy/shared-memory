@@ -16,12 +16,12 @@
 #include "ns3/ipv4-global-routing-helper.h"
 #include "ns3/traffic-control-module.h"
 
-#include "ns3/shared-memory-module.h"
+#include "ns3/ns3-ai-module.h"
 #include "tcp-rl.h"
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("TcpRlShm");
+NS_LOG_COMPONENT_DEFINE ("TcpRl");
 
 static std::vector<uint32_t> rxPkts;
 
@@ -45,7 +45,7 @@ PrintRxCount ()
 int
 main (int argc, char *argv[])
 {
-  // LogComponentEnable ("ShmPool", LOG_LEVEL_ALL);
+  // LogComponentEnable ("Pool", LOG_LEVEL_ALL);
   uint32_t nLeaf = 1;
   std::string transport_prot = "ns3::TcpRlTimeBased";
   double error_p = 0.0;
@@ -56,7 +56,7 @@ main (int argc, char *argv[])
   std::string prefix_file_name = "TcpVariantsComparison";
   uint64_t data_mbytes = 0;
   uint32_t mtu_bytes = 400;
-  double duration = 100.0;
+  double duration = 1000.0;
   uint32_t run = 0;
   bool flow_monitor = false;
   bool sack = true;

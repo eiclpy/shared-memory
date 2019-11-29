@@ -86,11 +86,11 @@ TcpRlTimeBased::GenerateUuid ()
 }
 
 void
-TcpRlTimeBased::CreateShmEnv ()
+TcpRlTimeBased::CreateEnv ()
 {
   NS_LOG_FUNCTION (this);
-  env = Create<TcpTimeStepShmEnv> (1234);
-  std::cerr << "CreateShmEnv" << (env == 0) << std::endl;
+  env = Create<TcpTimeStepEnv> (1234);
+  std::cerr << "CreateEnv" << (env == 0) << std::endl;
   env->SetSocketUuid (TcpRlTimeBased::GenerateUuid ());
 
   ConnectSocketCallbacks ();
@@ -146,8 +146,8 @@ TcpRlTimeBased::ConnectSocketCallbacks ()
   if (m_tcpSocket)
     {
       NS_LOG_DEBUG ("Found TCP Socket: " << m_tcpSocket);
-      m_tcpSocket->TraceConnectWithoutContext ("Tx", MakeCallback (&TcpRlShmEnv::TxPktTrace, env));
-      m_tcpSocket->TraceConnectWithoutContext ("Rx", MakeCallback (&TcpRlShmEnv::RxPktTrace, env));
+      m_tcpSocket->TraceConnectWithoutContext ("Tx", MakeCallback (&TcpRlEnv::TxPktTrace, env));
+      m_tcpSocket->TraceConnectWithoutContext ("Rx", MakeCallback (&TcpRlEnv::RxPktTrace, env));
       NS_LOG_DEBUG ("Connect socket callbacks " << m_tcpSocket->GetNode ()->GetId ());
       env->SetNodeId (m_tcpSocket->GetNode ()->GetId ());
     }
@@ -166,7 +166,7 @@ TcpRlTimeBased::GetSsThresh (Ptr<const TcpSocketState> state, uint32_t bytesInFl
   if (!m_cbConnect)
     {
       m_cbConnect = true;
-      CreateShmEnv ();
+      CreateEnv ();
     }
 
   uint32_t newSsThresh = 0;
@@ -182,7 +182,7 @@ TcpRlTimeBased::IncreaseWindow (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
   if (!m_cbConnect)
     {
       m_cbConnect = true;
-      CreateShmEnv ();
+      CreateEnv ();
     }
   env->IncreaseWindow (tcb, segmentsAcked);
 }
@@ -194,7 +194,7 @@ TcpRlTimeBased::PktsAcked (Ptr<TcpSocketState> tcb, uint32_t segmentsAcked, cons
   if (!m_cbConnect)
     {
       m_cbConnect = true;
-      CreateShmEnv ();
+      CreateEnv ();
     }
   env->PktsAcked (tcb, segmentsAcked, rtt);
 }
@@ -207,7 +207,7 @@ TcpRlTimeBased::CongestionStateSet (Ptr<TcpSocketState> tcb,
   if (!m_cbConnect)
     {
       m_cbConnect = true;
-      CreateShmEnv ();
+      CreateEnv ();
     }
   env->CongestionStateSet (tcb, newState);
 }
@@ -219,7 +219,7 @@ TcpRlTimeBased::CwndEvent (Ptr<TcpSocketState> tcb, const TcpSocketState::TcpCAE
   if (!m_cbConnect)
     {
       m_cbConnect = true;
-      CreateShmEnv ();
+      CreateEnv ();
     }
   env->CwndEvent (tcb, event);
 }

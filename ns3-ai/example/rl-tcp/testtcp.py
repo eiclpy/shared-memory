@@ -25,31 +25,18 @@ class TcpRlAct(Structure):
     ]
 
 
-class TcpRlOth(Structure):
-    _pack_ = 1
-    _fields_ = [
-        ('isFinish', c_bool)
-    ]
-
-
-class TcpRl(Structure):
-    _pack_ = 1
-    _fields_ = [
-        ('env', TcpRlEnv),
-        ('act', TcpRlAct),
-        ('oth', TcpRlOth)
-    ]
-
-
 py_interface.Init(1234, 4096)
-var = py_interface.ShmBigVar(1234, TcpRl)
-print(sizeof(TcpRl))
-while True:
-    while var.GetVersion() % 2 != 1:
-        pass
-    with var as data:
-        # print(data.env.ssThresh, data.env.cWnd)
 
+var = py_interface.ShmRL(1234, TcpRlEnv, TcpRlAct)
+
+# var = py_interface.ShmBigVar(1234, TcpRl)
+while not var.isFinish():
+    # while var.GetVersion() % 2 != 1:
+    #     pass
+    # with var as data:
+    #     # print(data.env.ssThresh, data.env.cWnd)
+    with var as data:
+        print(var.GetVersion())
         ssThresh = data.env.ssThresh
         cWnd = data.env.cWnd
         segmentsAcked = data.env.segmentsAcked
