@@ -440,17 +440,7 @@ void Ns3AIRL<EnvType, ActionType, SimInfoType>::SetCompleted(void)
 template <typename EnvType, typename ActionType, typename SimInfoType>
 void Ns3AIRL<EnvType, ActionType, SimInfoType>::SetFinish(void)
 {
-  if (!m_locked)
-  {
-    SharedMemoryPool::Get()->AcquireMemory(m_id);
-    m_locked = true;
-  }
-  *m_isFinish = true;
-  if (m_locked)
-  {
-    SharedMemoryPool::Get()->ReleaseMemory(m_id);
-    m_locked = false;
-  }
+  __sync_bool_compare_and_swap (m_isFinish, false, true);
 }
 template <typename EnvType, typename ActionType, typename SimInfoType>
 bool Ns3AIRL<EnvType, ActionType, SimInfoType>::GetIsFinish(void)

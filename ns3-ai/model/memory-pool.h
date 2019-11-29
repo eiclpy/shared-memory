@@ -55,7 +55,7 @@ struct SharedMemoryLockable
 class SharedMemoryPool : public Singleton<SharedMemoryPool>
 {
 public:
-  uint8_t *m_memoryPoolPtr;
+  uint8_t *m_memoryPoolPtr{NULL};
   CtrlInfoBlock *m_ctrlInfo;
   bool m_isCreator;
   key_t m_shmid;

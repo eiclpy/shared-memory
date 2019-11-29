@@ -25,7 +25,7 @@ READABLE = 0xff
 SETABLE = 0
 
 
-class ShmVar:
+class NS3Var:
     def __init__(self, uid, structType):
         class sType(Structure):
             _pack_ = 1
@@ -56,7 +56,7 @@ class ShmVar:
         return self.m_obj
 
 
-class ShmBigVar:
+class NS3BigVar:
     def __init__(self, uid, structType):
         assert issubclass(structType, Structure)
         self.m_id = uid
@@ -85,15 +85,15 @@ class ShmBigVar:
         ReleaseMemory(self.m_id)
 
 
-class RLEmptyInfo(Structure):
+class EmptyInfo(Structure):
     _pack_ = 1
     _fields_ = [
         ('unused', c_uint8)
     ]
 
 
-class ShmRL:
-    def __init__(self, uid, EnvType, ActType, ExtInfo=RLEmptyInfo):
+class Ns3AIRL:
+    def __init__(self, uid, EnvType, ActType, ExtInfo=EmptyInfo):
         assert issubclass(EnvType, Structure)
         assert issubclass(ActType, Structure)
         assert issubclass(ExtInfo, Structure)
@@ -127,17 +127,85 @@ class ShmRL:
         self.mod = mod
         self.res = res
 
-    def __enter__(self):  # ensure Ctrl+C can interrupt the function
+    def Acquire(self):
         while not self.isFinish() and self.GetVersion() % self.mod != self.res:
             pass
+        if self.isFinish():
+            return None
         AcquireMemory(self.m_id)
         return self.m_obj
 
-    def __exit__(self, Type, value, traceback):
+    def Release(self):
         ReleaseMemory(self.m_id)
 
+    def ReleaseAndRollback(self):
+        ReleaseMemoryRB(self.m_id)
+
+    def __enter__(self):  # ensure Ctrl+C can interrupt the function
+        return self.Acquire()
+
+    def __exit__(self, Type, value, traceback):
+        self.Release()
+
+class Ns3AIDL:
+    def __init__(self, uid, FeatureType, PredictedType, TargetType, ExtInfo=EmptyInfo):
+        assert issubclass(FeatureType, Structure)
+        assert issubclass(PredictedType, Structure)
+        assert issubclass(TargetType, Structure)
+        assert issubclass(ExtInfo, Structure)
+
+        self.m_id = uid
+        self.featureType = FeatureType
+        self.predictedType = PredictedType
+        self.targetType = TargetType
+        self.extInfo = ExtInfo
+
+        class StorageType(Structure):
+            _pack_ = 1
+            _fields_ = [
+                ('env', self.featureType),
+                ('act', self.predictedType),
+                ('tar', self.targetType),
+                ('ext', self.extInfo),
+                ('isFinish', c_bool)
+            ]
+        self.type = StorageType
+        self.m_obj = self.type.from_address(
+            RegisterMemory(self.m_id, sizeof(self.type)))
+        self.mod = 2
+        self.res = 1
+
+    def GetVersion(self):
+        return int(GetMemoryVersion(self.m_id))
+
+    def isFinish(self):
+        return self.m_obj.isFinish
+
+    def SetCond(self, mod, res):
+        self.mod = mod
+        self.res = res
+
+    def Acquire(self):
+        while not self.isFinish() and self.GetVersion() % self.mod != self.res:
+            pass
+        if self.isFinish():
+            return None
+        AcquireMemory(self.m_id)
+        return self.m_obj
+
+    def Release(self):
+        ReleaseMemory(self.m_id)
+
+    def ReleaseAndRollback(self):
+        ReleaseMemoryRB(self.m_id)
+
+    def __enter__(self):  # ensure Ctrl+C can interrupt the function
+        return self.Acquire()
+
+    def __exit__(self, Type, value, traceback):
+        self.Release()
 
 __all__ = ['Init', 'FreeMemory', 'GetMemory', 'RegisterMemory',
            'AcquireMemory', 'AcquireMemoryCond', 'AcquireMemoryTarget', 'AcquireMemoryCondFunc',
-           'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'IncMemoryVersion', 'ShmVar', 'ShmBigVar', 'ShmRL']
+           'ReleaseMemory', 'ReleaseMemoryRB', 'GetMemoryVersion', 'IncMemoryVersion', 'NS3Var', 'NS3BigVar', 'Ns3AIRL']
 
